@@ -1,0 +1,44 @@
+{
+    "test_clients_workflow": {
+        "dag": {
+            "dag_id": "test_clients_workflow",
+            "local_variable": "dag_test_clients_workflow"
+        },
+        "dependencies": {
+            "task1": {
+                "children": [
+                    "task2"
+                ]
+            },
+            "task2": {
+                "parents": [
+                    "task1"
+                ]
+            }
+        },
+        "tasks": {
+            "task1": {
+                "class": "XOSEventSensor",
+                "dag": "dag_test_clients_workflow",
+                "key_field": "serialNumber",
+                "local_variable": "task1",
+                "poke_interval": 5,
+                "provide_context": true,
+                "python_callable": "task1_func",
+                "task_id": "task1",
+                "topic": "onu.events"
+            },
+            "task2": {
+                "class": "XOSModelSensor",
+                "dag": "dag_test_clients_workflow",
+                "key_field": "serialNumber",
+                "local_variable": "task2",
+                "model_name": "AttWorkflowDriverServiceInstance",
+                "poke_interval": 5,
+                "provide_context": true,
+                "python_callable": "task2_func",
+                "task_id": "task2"
+            }
+        }
+    }
+}

@@ -1,0 +1,48 @@
+{
+    "name": "cord_workflow_controller",
+    "version": "0.1.0",
+    "description": "CORD Workflow Controller",
+    "main": "src/server.js",
+    "scripts": {
+      "start": "node src/server.js",
+      "test": "LOG_LEVEL=error nyc --reporter=cobertura --reporter=text mocha --exit spec/**/*.spec.js --reporter mocha-multi-reporters --reporter-options configFile=reporters.json",
+      "test:dev": "mocha --exit -w spec/**/*.spec.js",
+      "lint": "eslint spec src"
+    },
+    "author": "Open Networking Foundation",
+    "license": "Apache-2.0",
+    "repository": {
+      "type": "git",
+      "url": "git://gerrit.opencord.org/cord-workflow-controller.git"
+    },
+    "dependencies": {
+      "body-parser": "^1.19.0",
+      "cors": "^2.8.5",
+      "express": "^4.17.1",
+      "express-validator": "^6.0.1",
+      "lodash": "^4.17.11",
+      "async": "^3.1.0",
+      "node-yaml-config": "0.0.5",
+      "socket.io": "^2.2.0",
+      "socketio-wildcard": "^2.0.0",
+      "double-ended-queue": "^2.1.0-0",
+      "test": "^0.6.0",
+      "winston": "^3.2.1",
+      "yargs": "^13.2.4",
+      "dateformat": "^3.0.3"
+    },
+    "devDependencies": {
+      "chai": "^4.2.0",
+      "eslint": "5.16.0",
+      "eslint-plugin-import": "^2.17.3",
+      "mocha": "^6.1.4",
+      "mockery": "^2.1.0",
+      "nyc": "^14.1.1",
+      "sinon": "^7.3.2",
+      "sinon-chai": "^3.3.0",
+      "socket.io-client": "^2.2.0",
+      "supertest": "^4.0.2",
+      "mocha-multi-reporters": "^1.1.7",
+      "mocha-junit-reporter": "^1.23.0"
+    }
+  }
