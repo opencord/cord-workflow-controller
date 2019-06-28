@@ -20,9 +20,15 @@
 
     const logger = require('../config/logger.js');
 
+    const CORD_SENSORS = [
+        'XOSEventSensor', 'XOSModelSensor',
+        'CORDEventSensor', 'CORDModelSensor'
+    ];
+
     class WorkflowTask {
         constructor(id, kickstart=false) {
             this.id = id;
+            this.sensorClass = null;
             this.topic = null;
             this.kickstart = kickstart;
             this.keyField = null;
@@ -40,20 +46,22 @@
                     return null;
                 }
 
+                if('class' in essence) {
+                    workflowTask.setSensorClass(essence.class);
+                }
+
                 if('topic' in essence) {
                     workflowTask.setTopic(essence.topic);
                 }
 
                 if('model_name' in essence) {
-                    workflowTask.setTopic('datamodel.' + essence.model_name + '.create');
-                    workflowTask.setTopic('datamodel.' + essence.model_name + '.update');
-                    workflowTask.setTopic('datamodel.' + essence.model_name + '.delete');
+                    workflowTask.setTopic('datamodel.' + essence.model_name);
                 }
 
                 if('key_field' in essence) {
                     workflowTask.setKeyField(essence.key_field);
                 }
-    
+
                 workflowTask.setEssence(essence);
                 return workflowTask;
             }
@@ -68,6 +76,23 @@
 
         getId() {
             return this.id;
+        }
+
+        setSensorClass(sensorClass) {
+            this.sensorClass = sensorClass;
+        }
+
+        getSensorClass() {
+            return this.sensorClass;
+        }
+
+        isCORDTask() {
+            if(this.sensorClass) {
+                if(CORD_SENSORS.includes(this.sensorClass)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         setTopic(topic) {
@@ -89,7 +114,7 @@
         setKeyField(keyField) {
             this.keyField = keyField;
         }
-        
+
         getKeyField() {
             return this.keyField;
         }
@@ -109,21 +134,21 @@
             }
 
             // general Airflow operators other than XOS operators don't have these fields.
-            // 
+            //
             // if(!this.topic) {
             //     logger.log('error', 'topic is not given');
             //     return false;
             // }
-    
+
             // if(!this.keyField) {
             //     logger.log('error', 'keyField is not given');
             //     return false;
             // }
-    
+
             return true;
         }
     }
-    
+
     module.exports = {
         WorkflowTask: WorkflowTask
     };

@@ -79,7 +79,9 @@
                 workflowRun.addRunTask(runTask);
 
                 // set key_field / value
-                workflowRun.setEventKeyFieldValue(task.getTopic(), task.getKeyField(), null); // init
+                if(task.isCORDTask()) {
+                    workflowRun.setEventKeyFieldValue(task.getTopic(), task.getKeyField(), null); // init
+                }
             });
             return workflowRun;
         }
@@ -152,22 +154,21 @@
             return true;
         }
 
-        isEventKeyFieldValueAcceptable(topic, field, value) {
+        updateEventKeyFieldValueFromMessage(topic, message) {
             if(!(topic in this.eventKeyFieldValues)) {
-                // topic does not exist
+                logger.log('warn', `cannot find a topic ${topic} in event key field values`);
                 return false;
             }
 
             let keyFieldValues = this.eventKeyFieldValues[topic];
-            let index = _.findIndex(keyFieldValues, (keyFieldValue) => {
-                return (keyFieldValue.field === field) &&
-                    ((!keyFieldValue.value) || (keyFieldValue.value === value));
+            keyFieldValues.forEach((keyFieldValue) => {
+                if(keyFieldValue.field in message) {
+                    // has same field in the message
+                    // set value
+                    keyFieldValue['value'] = message[keyFieldValue.field];
+                }
             });
-
-            if(index >= 0) {
-                return true;
-            }
-            return false;
+            return true;
         }
 
         isEventAcceptableByKeyFieldValue(topic, message) {
@@ -176,17 +177,43 @@
                 return false;
             }
 
-            let keyFieldValues = this.eventKeyFieldValues[topic];
-            keyFieldValues.forEach((keyFieldValue) => {
-                if(keyFieldValue.field in message) {
-                    // has same field in the message
-                    // check value
-                    if(keyFieldValue.value === message[keyFieldValue.field]) {
-                        // has the same value
-                        return true;
+            // check all key-field values
+            for(let key in this.eventKeyFieldValues) {
+                if (!this.eventKeyFieldValues.hasOwnProperty(key)) {
+                    continue;
+                }
+
+                let keyFieldValues = this.eventKeyFieldValues[key];
+                let arrayLength = keyFieldValues.length;
+                for (var i = 0; i < arrayLength; i++) {
+                    let keyFieldValue = keyFieldValues[i];
+
+                    if(keyFieldValue.field in message) {
+                        // has same field in the message
+                        // check value
+                        if(keyFieldValue.value === message[keyFieldValue.field]) {
+                            // has the same value
+                            return true;
+                        }
                     }
                 }
-            });
+            }
+
+            // We cannot break the loop when we get the result.
+            // because return/break does not work with handler functions
+            // _.forOwn(this.eventKeyFieldValues, (keyFieldValues, _topic) => {
+            //     keyFieldValues.forEach((keyFieldValue) => {
+            //         if(keyFieldValue.field in message) {
+            //             // has same field in the message
+            //             // check value
+            //             if(keyFieldValue.value === message[keyFieldValue.field]) {
+            //                 // has the same value
+            //                 result = true;
+            //             }
+            //         }
+            //     });
+            // });
+
             return false;
         }
 
@@ -295,8 +322,11 @@
             // 2) the task's key field and value
             if(this.isTopicAcceptable(workflow, topic) &&
                 this.isEventAcceptableByKeyFieldValue(topic, message)) {
+                // update key-field values for my topic
+                this.updateEventKeyFieldValueFromMessage(topic, message);
                 return true;
             }
+
             return false;
         }
 

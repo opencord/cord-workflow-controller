@@ -22,13 +22,14 @@
 
     let serviceEvents = {
         WORKFLOW_RUN_UPDATE_STATUS: 'cord.workflow.ctlsvc.workflow.run.status',
+        WORKFLOW_RUN_COUNT_EVENTS: 'cord.workflow.ctlsvc.workflow.run.count',
         WORKFLOW_RUN_FETCH_EVENT: 'cord.workflow.ctlsvc.workflow.run.fetch'
     };
 
     // WebSocket interface for workflow status update
     // Message format:
     // {
-    //     topic: 'cord.workflow.ctlsvc.workflowrun.status',
+    //     topic: 'cord.workflow.ctlsvc.workflow.run.status',
     //     message: {
     //          workflow_id: <workflow_id>,
     //          workflow_run_id: <workflow_run_id>,
@@ -90,10 +91,52 @@
         return;
     };
 
-    // WebSocket interface for workflow status update
+    // WebSocket interface for counting queued events
     // Message format:
     // {
-    //     topic: 'cord.workflow.ctlsvc.workflowrun.fetch',
+    //     topic: 'cord.workflow.ctlsvc.workflow.run.count',
+    //     message: {
+    //          workflow_id: <workflow_id>,
+    //          workflow_run_id: <workflow_run_id>
+    //     }
+    // }
+    const countQueuedEvents = (topic, message, cb) => {
+        const eventrouter = require('./eventrouter.js');
+
+        let errorMessage;
+        if(!message) {
+            // error
+            errorMessage = `Message body for topic ${topic} is null or empty`;
+            logger.log('warn', `Return error - ${errorMessage}`);
+            cb(errorMessage, false);
+            return;
+        }
+
+        if(!('workflow_id' in message)) {
+            // error
+            errorMessage = `workflow_id field is not in message body - ${message}`;
+            logger.log('warn', `Return error - ${errorMessage}`);
+            cb(errorMessage, false);
+            return;
+        }
+
+        if(!('workflow_run_id' in message)) {
+            // error
+            errorMessage = `workflow_run_id field is not in message body - ${message}`;
+            logger.log('warn', `Return error - ${errorMessage}`);
+            cb(errorMessage, false);
+            return;
+        }
+
+        let count = eventrouter.countQueuedEvents(message.workflow_run_id);
+        cb(null, count);
+        return;
+    };
+
+    // WebSocket interface for fetching an event
+    // Message format:
+    // {
+    //     topic: 'cord.workflow.ctlsvc.workflow.run.fetch',
     //     message: {
     //          workflow_id: <workflow_id>,
     //          workflow_run_id: <workflow_run_id>,
@@ -168,6 +211,10 @@
             updateWorkflowRunStatus: {
                 topic: serviceEvents.WORKFLOW_RUN_UPDATE_STATUS,
                 handler: updateWorkflowRunStatus
+            },
+            countQueuedEvents: {
+                topic: serviceEvents.WORKFLOW_RUN_COUNT_EVENTS,
+                handler: countQueuedEvents
             },
             fetchEvent: {
                 topic: serviceEvents.WORKFLOW_RUN_FETCH_EVENT,

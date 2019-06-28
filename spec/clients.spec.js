@@ -41,6 +41,8 @@
         var workflowId;
         var workflowRunId;
 
+        this.slow(5000);
+
         before(function() {
             // Start our server
             server.start(port);
@@ -99,7 +101,9 @@
 
                         workflowCnt++;
 
-                        workflowManagerClient.emit(eventrouter.serviceEvents.WORKFLOW_CHECK, essenceWorkflowId);
+                        workflowManagerClient.emit(eventrouter.serviceEvents.WORKFLOW_CHECK, {
+                            workflow_id: essenceWorkflowId
+                        });
 
                         workflowManagerClient.on(eventrouter.serviceEvents.WORKFLOW_CHECK, (workflowCheckResult) => {
                             workflowCnt--;
@@ -124,7 +128,9 @@
                     if(register) {
                         let essence = essenceLoader.loadEssence(essenceFileName, true);
 
-                        workflowManagerClient.emit(eventrouter.serviceEvents.WORKFLOW_REG_ESSENCE, essence);
+                        workflowManagerClient.emit(eventrouter.serviceEvents.WORKFLOW_REG_ESSENCE, {
+                            essence: essence
+                        });
 
                         workflowManagerClient.on(
                             eventrouter.serviceEvents.WORKFLOW_REG_ESSENCE,
@@ -144,7 +150,7 @@
                     setTimeout(() => {
                         expect(workflowRunId).to.not.be.undefined;
                         callback(null, true);
-                    }, 500);
+                    }, 1000);
                     return;
                 },
                 (callback) => {
@@ -182,7 +188,9 @@
             });
 
             // remove workflow
-            workflowManagerClient.emit(server.serviceEvents.WORKFLOW_REMOVE, workflowId);
+            workflowManagerClient.emit(server.serviceEvents.WORKFLOW_REMOVE, {
+                workflow_id: workflowId
+            });
 
             workflowId = null;
             workflowRunId = null;
