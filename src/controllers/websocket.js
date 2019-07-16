@@ -26,7 +26,10 @@
     let io;
     const createSocketIO = (server) => {
         // INSTANTIATE SOCKET.IO
-        io = socketio.listen(server);
+        io = socketio.listen(server, {
+            pingInterval: 500,
+            pingTimeout: 2000,
+        });
         io.use(ioWildcard());
 
         // set io to eventrouter

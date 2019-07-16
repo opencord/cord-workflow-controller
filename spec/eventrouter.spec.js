@@ -87,7 +87,7 @@
 
                         setTimeout(() => {
                             // call-back
-                            workflowManagerClient.emit(eventrouter.serviceEvents.WORKFLOW_KICKSTART, {
+                            workflowManagerClient.emit(eventrouter.serviceEvents.WORKFLOW_NOTIFY_NEW_RUN, {
                                 workflow_id: message.workflow_id,
                                 workflow_run_id: message.workflow_run_id
                             })
@@ -111,6 +111,14 @@
 
                     workflowManagerClient.on(eventrouter.serviceEvents.WORKFLOW_KICKSTART, (message) => {
                         receivedKickstartMessages[1].push(message);
+
+                        setTimeout(() => {
+                            // call-back
+                            workflowManagerClient.emit(eventrouter.serviceEvents.WORKFLOW_NOTIFY_NEW_RUN, {
+                                workflow_id: message.workflow_id,
+                                workflow_run_id: message.workflow_run_id
+                            })
+                        }, 1000);
                     });
 
                     workflowManagerClient.on('connect', () => {
@@ -124,7 +132,7 @@
                     let essence = essenceLoader.loadEssence(essenceFileName, true);
 
                     // register the workflow
-                    workflowManagerClients[0].emit(eventrouter.serviceEvents.WORKFLOW_REG_ESSENCE, {
+                    workflowManagerClients[0].emit(eventrouter.serviceEvents.WORKFLOW_REGISTER_ESSENCE, {
                         essence: essence
                     });
 
@@ -135,7 +143,7 @@
 
                     // handle return
                     workflowManagerClients[0].on(
-                        eventrouter.serviceEvents.WORKFLOW_REG_ESSENCE,
+                        eventrouter.serviceEvents.WORKFLOW_REGISTER_ESSENCE,
                         (workflowRegResult) => {
                             callback(null, workflowRegResult);
                         }
@@ -158,7 +166,7 @@
         afterEach(function() {
             // remove workflow runs
             _.forOwn(workflowRunInfos, (workflowRunInfo) => {
-                workflowManagerClients[0].emit(server.serviceEvents.WORKFLOW_RUN_REMOVE, {
+                workflowManagerClients[0].emit(server.serviceEvents.WORKFLOW_REMOVE_RUN, {
                     workflow_id: workflowRunInfo.workflowId,
                     workflow_run_id: workflowRunInfo.workflowRunId
                 });
@@ -213,6 +221,8 @@
         });
 
         it('all managers should receive kickstart messages', function(done) {
+            this.timeout(5000);
+
             // kickstart the workflow
             probeClient.emit('onu.events', {serialNumber: 'testSerialXXX', other: 'test_other_field'});
             setTimeout(() => {
@@ -221,7 +231,7 @@
                     expect(receivedKickstartMessageStore.length, 'num of messages in a store').to.equal(1);
                 });
                 done();
-            }, 1000);
+            }, 2000);
         });
 
         it('should have only one workflow run', function(done) {

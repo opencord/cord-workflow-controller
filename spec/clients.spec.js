@@ -80,7 +80,7 @@
                         workflowRunId = message.workflow_run_id;
 
                         // call-back
-                        workflowManagerClient.emit(eventrouter.serviceEvents.WORKFLOW_KICKSTART, {
+                        workflowManagerClient.emit(eventrouter.serviceEvents.WORKFLOW_NOTIFY_NEW_RUN, {
                             workflow_id: workflowId,
                             workflow_run_id: workflowRunId
                         })
@@ -128,12 +128,12 @@
                     if(register) {
                         let essence = essenceLoader.loadEssence(essenceFileName, true);
 
-                        workflowManagerClient.emit(eventrouter.serviceEvents.WORKFLOW_REG_ESSENCE, {
+                        workflowManagerClient.emit(eventrouter.serviceEvents.WORKFLOW_REGISTER_ESSENCE, {
                             essence: essence
                         });
 
                         workflowManagerClient.on(
-                            eventrouter.serviceEvents.WORKFLOW_REG_ESSENCE,
+                            eventrouter.serviceEvents.WORKFLOW_REGISTER_ESSENCE,
                             (workflowRegResult) => {
                                 callback(null, workflowRegResult);
                             }
@@ -182,7 +182,7 @@
 
         afterEach(function(done) {
             // remove workflow run
-            workflowManagerClient.emit(server.serviceEvents.WORKFLOW_RUN_REMOVE, {
+            workflowManagerClient.emit(server.serviceEvents.WORKFLOW_REMOVE_RUN, {
                 workflow_id: workflowId,
                 workflow_run_id: workflowRunId
             });

@@ -19,6 +19,7 @@
         "tasks": {
             "task1": {
                 "class": "XOSEventSensor",
+                "dag_id": "test_clients_workflow",
                 "dag": "dag_test_clients_workflow",
                 "key_field": "serialNumber",
                 "local_variable": "task1",
@@ -30,6 +31,7 @@
             },
             "task2": {
                 "class": "XOSModelSensor",
+                "dag_id": "test_clients_workflow",
                 "dag": "dag_test_clients_workflow",
                 "key_field": "serialNumber",
                 "local_variable": "task2",

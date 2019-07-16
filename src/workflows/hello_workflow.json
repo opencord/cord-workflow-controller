@@ -10,6 +10,7 @@
         "tasks": {
             "onu_event_handler": {
                 "class": "XOSEventSensor",
+                "dag_id": "hello_workflow",
                 "dag": "dag_hello",
                 "key_field": "serialNumber",
                 "local_variable": "onu_event_handler",

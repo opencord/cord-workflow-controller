@@ -27,6 +27,7 @@
         "tasks": {
             "must_not_be_called_handler": {
                 "class": "UnknownSensor",
+                "dag_id": "must_not_be_called",
                 "dag": "dag_must_not_be_called",
                 "local_variable": "must_not_be_called_handler",
                 "poke_interval": 5,
@@ -35,6 +36,7 @@
             },
             "onu_event_handler": {
                 "class": "XOSEventSensor",
+                "dag_id": "must_not_be_called",
                 "dag": "dag_must_not_be_called",
                 "key_field": "serialNumber",
                 "local_variable": "onu_event_handler",
@@ -46,6 +48,7 @@
             },
             "onu_model_event_handler": {
                 "class": "XOSModelSensor",
+                "dag_id": "must_not_be_called",
                 "dag": "dag_must_not_be_called",
                 "key_field": "serialNumber",
                 "local_variable": "onu_model_event_handler",
@@ -85,6 +88,7 @@
         "tasks": {
             "onu_event_handler": {
                 "class": "XOSEventSensor",
+                "dag_id": "must_not_be_called",
                 "dag": "dag_should_be_called",
                 "key_field": "serialNumber",
                 "local_variable": "onu_event_handler",
@@ -96,6 +100,7 @@
             },
             "onu_model_event_handler": {
                 "class": "XOSModelSensor",
+                "dag_id": "must_not_be_called",
                 "dag": "dag_should_be_called",
                 "key_field": "serialNumber",
                 "local_variable": "onu_model_event_handler",
@@ -107,6 +112,7 @@
             },
             "can_be_stuck_handler": {
                 "class": "UnknownSensor",
+                "dag_id": "must_not_be_called",
                 "dag": "dag_should_be_called",
                 "local_variable": "can_be_stuck_handler",
                 "poke_interval": 5,

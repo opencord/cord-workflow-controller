@@ -94,6 +94,15 @@
         return true;
     };
 
+    const getWorkflow = (workflowId) => {
+        if(workflowId in workflows) {
+            logger.log('warn', `cannot find a workflow with id - ${workflowId}`);
+            return null;
+        }
+
+        return workflows[workflowId];
+    };
+
     const clearWorkflows = () => {
         _.forOwn(workflows, (_workflow, workflowId) => {
             delete workflows[workflowId];
@@ -131,6 +140,15 @@
 
         workflowRuns[workflowRunId] = workflowRun;
         return true;
+    };
+
+    const getWorkflowRun = (workflowRunId) => {
+        if(workflowRunId in workflowRuns) {
+            logger.log('warn', `cannot find a workflow run with id - ${workflowRunId}`);
+            return null;
+        }
+
+        return workflowRuns[workflowRunId];
     };
 
     const clearWorkflowRuns = () => {
@@ -379,6 +397,7 @@
             //      topic: topic sent
             //      message: {
             //          req_id: <req_id>,
+            //          error: <true/false>,
             //          result: <true/false>,
             //          message: <error message>
             //      }
@@ -411,6 +430,7 @@
                             return;
                         }
 
+                        // we return result
                         if(routerElem.return === undefined || routerElem.return) {
                             socket.emit(routerElem.topic, {
                                 req_id: req_id,
@@ -428,10 +448,18 @@
             // workflow run protocol:
             // REQ:
             //      topic: operation
-            //      message: <data>
+            //      message: {
+            //          req_id: <req_id>,
+            //          <data>...
+            //      }
             // RES:
             //      topic: topic sent
-            //      message: {result: <true/false>, message: <error message> }
+            //      message: {
+            //          req_id: <req_id>,
+            //          error: <true/false>,
+            //          result: <true/false>,
+            //          message: <error message>
+            //      }
 
             // map to WorkflowRun instance
             let workflowId = c.getWorkflowId();
@@ -463,18 +491,33 @@
             let router = ws_workflowrun.getRouter();
             _.forOwn(router, (routerElem, _key) => {
                 socket.on(routerElem.topic, (msg) => {
-                    routerElem.handler(routerElem.topic, msg, (err, result) => {
+                    // handle a common parameter - req_id
+                    // when we get req_id, return the same req_id in response.
+                    // this is to help identify a request from a response at client-side
+                    let req_id = 101010; // default number, signiture
+                    if(msg && checkObject(msg)) {
+                        if('req_id' in msg) {
+                            req_id = msg.req_id;
+                        }
+                    }
+
+                    routerElem.handler(routerElem.topic, msg || {}, (err, result) => {
                         if(err) {
                             logger.log('warn', `unable to handle a message - ${err}`);
                             socket.emit(routerElem.topic, {
+                                req_id: req_id,
+                                error: true,
                                 result: false,
                                 message: err
                             });
                             return;
                         }
 
+                        // we return result
                         if(routerElem.return === undefined || routerElem.return) {
                             socket.emit(routerElem.topic, {
+                                req_id: req_id,
+                                error: false,
                                 result: result
                             });
                         }
@@ -552,11 +595,13 @@
         removeClient: removeClient,
         removeClients: removeClients,
         addWorkflow: addWorkflow,
+        getWorkflow: getWorkflow,
         listWorkflows: listWorkflows,
         checkWorkflow: checkWorkflow,
         removeWorkflow: removeWorkflow,
         clearWorkflows: clearWorkflows,
         addWorkflowRun: addWorkflowRun,
+        getWorkflowRun: getWorkflowRun,
         listWorkflowRuns: listWorkflowRuns,
         checkWorkflowRun: checkWorkflowRun,
         removeWorkflowRun: removeWorkflowRun,
