@@ -18,27 +18,25 @@
         },
         "tasks": {
             "task1": {
-                "class": "XOSEventSensor",
+                "class": "CORDEventSensor",
+                "controller_conn_id": "local_cord_controller",
                 "dag_id": "test_clients_workflow",
                 "dag": "dag_test_clients_workflow",
                 "key_field": "serialNumber",
                 "local_variable": "task1",
                 "poke_interval": 5,
-                "provide_context": true,
-                "python_callable": "task1_func",
                 "task_id": "task1",
                 "topic": "onu.events"
             },
             "task2": {
-                "class": "XOSModelSensor",
+                "class": "CORDModelSensor",
+                "controller_conn_id": "local_cord_controller",
                 "dag_id": "test_clients_workflow",
                 "dag": "dag_test_clients_workflow",
                 "key_field": "serialNumber",
                 "local_variable": "task2",
                 "model_name": "AttWorkflowDriverServiceInstance",
                 "poke_interval": 5,
-                "provide_context": true,
-                "python_callable": "task2_func",
                 "task_id": "task2"
             }
         }

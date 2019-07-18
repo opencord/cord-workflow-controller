@@ -21,7 +21,6 @@
     const logger = require('../config/logger.js');
 
     const CORD_SENSORS = [
-        'XOSEventSensor', 'XOSModelSensor',
         'CORDEventSensor', 'CORDModelSensor'
     ];
 
@@ -133,7 +132,7 @@
                 return false;
             }
 
-            // general Airflow operators other than XOS operators don't have these fields.
+            // general Airflow operators other than XOS/CORD operators don't have these fields.
             //
             // if(!this.topic) {
             //     logger.log('error', 'topic is not given');

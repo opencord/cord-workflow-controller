@@ -40,7 +40,7 @@
 
     var receivedKickstartMessages = [[],[]];
 
-    describe('Workflow kickstart test', function() {
+    describe('Event Router test', function() {
         this.slow(5000);
 
         before(function() {
@@ -70,12 +70,12 @@
                 (callback) => {
                     // connect first workflow manager to the server
                     // this manager will kickstart a workflow
-                    let workflowManagerClient = io.connect(`http://localhost:${port}`, {
+                    let workflowManagerClient1 = io.connect(`http://localhost:${port}`, {
                         query: 'id=workflow_manager_id1&type=workflow_manager' +
                                 '&name=manager1@xos.org'
                     });
 
-                    workflowManagerClient.on(eventrouter.serviceEvents.WORKFLOW_KICKSTART, (message) => {
+                    workflowManagerClient1.on(eventrouter.serviceEvents.WORKFLOW_KICKSTART, (message) => {
                         // save it for check
                         receivedKickstartMessages[0].push(message);
 
@@ -87,45 +87,45 @@
 
                         setTimeout(() => {
                             // call-back
-                            workflowManagerClient.emit(eventrouter.serviceEvents.WORKFLOW_NOTIFY_NEW_RUN, {
+                            workflowManagerClient1.emit(eventrouter.serviceEvents.WORKFLOW_REPORT_NEW_RUN, {
                                 workflow_id: message.workflow_id,
                                 workflow_run_id: message.workflow_run_id
                             })
                         }, 1000);
                     });
 
-                    workflowManagerClient.on('connect', () => {
+                    workflowManagerClient1.on('connect', () => {
                         callback(null, true);
                     });
 
-                    workflowManagerClients.push(workflowManagerClient);
+                    workflowManagerClients.push(workflowManagerClient1);
                     return;
                 },
                 (callback) => {
                     // connect second workflow manager to the server
                     // this manager will not kickstart a workflow
-                    let workflowManagerClient = io.connect(`http://localhost:${port}`, {
+                    let workflowManagerClient2 = io.connect(`http://localhost:${port}`, {
                         query: 'id=workflow_manager_id2&type=workflow_manager' +
                                 '&name=manager2@xos.org'
                     });
 
-                    workflowManagerClient.on(eventrouter.serviceEvents.WORKFLOW_KICKSTART, (message) => {
+                    workflowManagerClient2.on(eventrouter.serviceEvents.WORKFLOW_KICKSTART, (message) => {
                         receivedKickstartMessages[1].push(message);
 
                         setTimeout(() => {
                             // call-back
-                            workflowManagerClient.emit(eventrouter.serviceEvents.WORKFLOW_NOTIFY_NEW_RUN, {
+                            workflowManagerClient2.emit(eventrouter.serviceEvents.WORKFLOW_REPORT_NEW_RUN, {
                                 workflow_id: message.workflow_id,
                                 workflow_run_id: message.workflow_run_id
                             })
                         }, 1000);
                     });
 
-                    workflowManagerClient.on('connect', () => {
+                    workflowManagerClient2.on('connect', () => {
                         callback(null, true);
                     });
 
-                    workflowManagerClients.push(workflowManagerClient);
+                    workflowManagerClients.push(workflowManagerClient2);
                     return;
                 },
                 (callback) => {
@@ -163,7 +163,9 @@
             return;
         });
 
-        afterEach(function() {
+        afterEach(function(done) {
+            this.timeout(5000);
+
             // remove workflow runs
             _.forOwn(workflowRunInfos, (workflowRunInfo) => {
                 workflowManagerClients[0].emit(server.serviceEvents.WORKFLOW_REMOVE_RUN, {
@@ -205,6 +207,11 @@
                 probeClient.disconnect();
             }
             probeClient = null;
+
+            setTimeout(() => {
+                // this gives enough time to complete disconnection for clients
+                done();
+            }, 2000);
         });
 
         it('should have two workflows', function(done) {

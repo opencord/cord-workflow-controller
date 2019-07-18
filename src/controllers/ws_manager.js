@@ -31,9 +31,11 @@
         WORKFLOW_CHECK: 'cord.workflow.ctlsvc.workflow.check',
         WORKFLOW_REMOVE: 'cord.workflow.ctlsvc.workflow.remove',
         WORKFLOW_REMOVE_RUN: 'cord.workflow.ctlsvc.workflow.run.remove',
-        WORKFLOW_NOTIFY_NEW_RUN: 'cord.workflow.ctlsvc.workflow.notify_new_run',
+        WORKFLOW_REPORT_NEW_RUN: 'cord.workflow.ctlsvc.workflow.report_new_run',
+        WORKFLOW_REPORT_RUN_STATE: 'cord.workflow.ctlsvc.workflow.report_run_state',
         // controller -> manager
-        WORKFLOW_KICKSTART: 'cord.workflow.ctlsvc.workflow.kickstart'
+        WORKFLOW_KICKSTART: 'cord.workflow.ctlsvc.workflow.kickstart',
+        WORKFLOW_CHECK_STATE: 'cord.workflow.ctlsvc.workflow.check.state'
     };
 
     // WebSocket interface for workflow registration
@@ -233,7 +235,7 @@
         let result = eventrouter.removeWorkflow(workflowId);
         cb(null, result);
         return;
-    }
+    };
 
     // WebSocket interface for workflow run removal
     // Message format:
@@ -278,19 +280,19 @@
         let result = eventrouter.removeWorkflowRun(workflowRunId);
         cb(null, result);
         return;
-    }
+    };
 
-    // WebSocket interface for notifying a new workflow run
+    // WebSocket interface for reporting a new workflow run
     // Message format:
     // {
-    //     topic: 'cord.workflow.ctlsvc.workflow.notify_new_run',
+    //     topic: 'cord.workflow.ctlsvc.workflow.report_new_run',
     //     message: {
     //         req_id: <req_id> // optional
     //         workflow_id: <workflow_id>,
     //         workflow_run_id: <workflow_run_id>
     //     }
     // }
-    const notifyNewWorkflowRun = (topic, message, cb) => {
+    const reportNewWorkflowRun = (topic, message, cb) => {
         const eventrouter = require('./eventrouter.js');
 
         let errorMessage;
@@ -325,6 +327,63 @@
         let result = eventrouter.setWorkflowRunKickstarted(workflowRunId);
         cb(null, result);
         return;
+    };
+
+    // WebSocket interface for reporting workflow run state
+    // Message format:
+    // {
+    //     topic: 'cord.workflow.ctlsvc.workflow.report_run_state',
+    //     message: {
+    //         req_id: <req_id> // optional
+    //         workflow_id: <workflow_id>,
+    //         workflow_run_id: <workflow_run_id>,
+    //         state: one of ['success', 'running', 'failed', 'unknown']
+    //     }
+    // }
+    const reportWorkflowRunState = (topic, message, cb) => {
+        const eventrouter = require('./eventrouter.js');
+
+        let errorMessage;
+        if(!message) {
+            // error
+            errorMessage = `Message body for topic ${topic} is null or empty`;
+            logger.log('warn', `Return error - ${errorMessage}`);
+            cb(errorMessage, false);
+            return;
+        }
+
+        if(!('workflow_id' in message)) {
+            // error
+            errorMessage = `field 'workflow_id' does not exist in message body - ${JSON.stringify(message)}`;
+            logger.log('warn', `Return error - ${errorMessage}`);
+            cb(errorMessage, false);
+            return;
+        }
+
+        if(!('workflow_run_id' in message)) {
+            // error
+            errorMessage = `field 'workflow_run_id' does not exist in message body - ${JSON.stringify(message)}`;
+            logger.log('warn', `Return error - ${errorMessage}`);
+            cb(errorMessage, false);
+            return;
+        }
+
+        if(!('state' in message)) {
+            // error
+            errorMessage = `field 'state' does not exist in message body - ${JSON.stringify(message)}`;
+            logger.log('warn', `Return error - ${errorMessage}`);
+            cb(errorMessage, false);
+            return;
+        }
+
+        let workflowRunId = message.workflow_run_id;
+        let state = message.state;
+
+        // there must be a workflow matching
+        // set workflow state
+        let result = eventrouter.setWorkflowRunState(workflowRunId, state);
+        cb(null, result);
+        return;
     }
 
     const getRouter = () => {
@@ -357,9 +416,13 @@
                 topic: serviceEvents.WORKFLOW_REMOVE_RUN,
                 handler: removeWorkflowRun
             },
-            notifyNewWorkflowRun: {
-                topic: serviceEvents.WORKFLOW_NOTIFY_NEW_RUN,
-                handler: notifyNewWorkflowRun
+            reportNewWorkflowRun: {
+                topic: serviceEvents.WORKFLOW_REPORT_NEW_RUN,
+                handler: reportNewWorkflowRun
+            },
+            reportWorkflowRunState: {
+                topic: serviceEvents.WORKFLOW_REPORT_RUN_STATE,
+                handler: reportWorkflowRunState
             }
         };
     };
@@ -381,9 +444,26 @@
         return;
     };
 
+    const checkWorkflowState = (workflowId, workflowRunId) => {
+        const eventrouter = require('./eventrouter.js');
+
+        let clients = eventrouter.getWorkflowManagerClients();
+        _.forOwn(clients, (client, _clientId) => {
+            let socket = client.getSocket();
+            if(socket) {
+                socket.emit(serviceEvents.WORKFLOW_CHECK_STATE, {
+                    workflow_id: workflowId,
+                    workflow_run_id: workflowRunId
+                });
+            }
+        });
+        return;
+    };
+
     module.exports = {
         serviceEvents: serviceEvents,
         getRouter: getRouter,
-        kickstartWorkflow: kickstartWorkflow
+        kickstartWorkflow: kickstartWorkflow,
+        checkWorkflowState: checkWorkflowState
     };
 })();

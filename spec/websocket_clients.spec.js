@@ -80,7 +80,7 @@
                         workflowRunId = message.workflow_run_id;
 
                         // call-back
-                        workflowManagerClient.emit(eventrouter.serviceEvents.WORKFLOW_NOTIFY_NEW_RUN, {
+                        workflowManagerClient.emit(eventrouter.serviceEvents.WORKFLOW_REPORT_NEW_RUN, {
                             workflow_id: workflowId,
                             workflow_run_id: workflowRunId
                         })

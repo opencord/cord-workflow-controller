@@ -179,6 +179,18 @@
         return true;
     };
 
+    const setWorkflowRunState = (workflowRunId, state) => {
+        if(!(workflowRunId in workflowRuns)) {
+            logger.log('warn', `cannot find a workflow run with the id - ${workflowRunId}`);
+            return false;
+        }
+
+        if(state in ['success', 'failed', 'end']) {
+            removeWorkflowRun(workflowRunId);
+        }
+        return true;
+    };
+
     const kickstart = (workflowId, workflowRunId) => {
         if(!(workflowId in workflows)) {
             logger.log('warn', `cannot find a workflow with the id - ${workflowId}`);
@@ -191,6 +203,7 @@
         }
 
         ws_manager.kickstartWorkflow(workflowId, workflowRunId);
+        return true;
     };
 
     const removeWorkflow = (workflowId) => {
@@ -608,5 +621,6 @@
         clearWorkflowRuns: clearWorkflowRuns,
         updateWorkflowRunStatus: updateWorkflowRunStatus,
         setWorkflowRunKickstarted: setWorkflowRunKickstarted,
+        setWorkflowRunState: setWorkflowRunState
     };
 })();
