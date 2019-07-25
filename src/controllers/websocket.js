@@ -18,7 +18,6 @@
     'use strict';
 
     const socketio = require('socket.io');
-    const ioWildcard = require('socketio-wildcard');
     const client = require('../types/client.js');
     const eventrouter = require('./eventrouter.js');
     const logger = require('../config/logger.js');
@@ -30,7 +29,6 @@
             pingInterval: 500,
             pingTimeout: 2000,
         });
-        io.use(ioWildcard());
 
         // set io to eventrouter
         //eventrouter.setIO(io);

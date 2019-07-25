@@ -1,6 +1,6 @@
 {
     "name": "cord_workflow_controller",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "CORD Workflow Controller",
     "main": "src/server.js",
     "scripts": {
@@ -24,7 +24,6 @@
       "async": "^3.1.0",
       "node-yaml-config": "0.0.5",
       "socket.io": "^2.2.0",
-      "socketio-wildcard": "^2.0.0",
       "double-ended-queue": "^2.1.0-0",
       "test": "^0.6.0",
       "winston": "^3.2.1",

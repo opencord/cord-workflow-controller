@@ -22,6 +22,7 @@
     const logger = require('../config/logger.js');
     const Client = require('../types/client.js');
     const WorkflowRun = require('../types/workflowrun.js');
+    const ws_probe = require('./ws_probe.js');
     const ws_manager = require('./ws_manager.js');
     const ws_workflowrun = require('./ws_workflowrun.js');
 
@@ -44,12 +45,17 @@
         GREETING: 'cord.workflow.ctlsvc.greeting'
     };
 
-    // add ws_mgroperation events
+    // add ws_probe events
+    _.forOwn(ws_probe.serviceEvents, (wsServiceEvent, key) => {
+        serviceEvents[key] = wsServiceEvent;
+    });
+
+    // add ws_manager events
     _.forOwn(ws_manager.serviceEvents, (wsServiceEvent, key) => {
         serviceEvents[key] = wsServiceEvent;
     });
 
-    // add ws_runoperation events
+    // add ws_workflowrun events
     _.forOwn(ws_workflowrun.serviceEvents, (wsServiceEvent, key) => {
         serviceEvents[key] = wsServiceEvent;
     });
@@ -250,7 +256,7 @@
         return true;
     };
 
-    const sendEvent = (topic, message) => {
+    const emitEvent = (topic, message) => {
         // list of workflowIds
         // to check if there are workflow runs for the events
         let workflowIdsRunning = [];
@@ -359,41 +365,62 @@
         }
 
         if(c.getType() === Client.Type.PROBE) {
-            // probe' messages are relayed
-            // relay messages based on topic
+            // probe
             // probe protocol:
             // REQ:
-            //      topic: event topic
-            //      message: <data>
+            //      topic: operation
+            //      message: {
+            //          req_id: <req_id>,
+            //          topic: <topic>,
+            //          message: <data>
+            //      }
             // RES:
             //      topic: topic sent
-            //      message: {result: <true/false>, message: <error message> }
+            //      message: {
+            //          req_id: <req_id>,
+            //          error: <true/false>,
+            //          result: <true/false>,
+            //          message: <error message>
+            //      }
             allClients[clientId] = c;
             probeClients[clientId] = c;
 
-            socket.on('*', (msg) => {
-                let jsonMsg = msg.data;
-                if(jsonMsg.length === 2) {
-                    // must have two parts
-                    // first part is topic
-                    // second part is message body
-                    let topic = jsonMsg[0];
-                    let messageBody = jsonMsg[1];
+            // attach probe operations
+            let router = ws_probe.getRouter();
+            _.forOwn(router, (routerElem, _key) => {
+                socket.on(routerElem.topic, (msg) => {
+                    // handle a common parameter - req_id
+                    // when we get req_id, return the same req_id in response.
+                    // this is to help identify a request from a response at client-side
+                    let req_id = 101010; // default number, signiture
+                    if(msg && checkObject(msg)) {
+                        if('req_id' in msg) {
+                            req_id = msg.req_id;
+                        }
+                    }
 
-                    sendEvent(topic, messageBody);
+                    routerElem.handler(routerElem.topic, msg || {}, (err, result) => {
+                        if(err) {
+                            logger.log('warn', `unable to handle a message - ${err}`);
+                            socket.emit(routerElem.topic, {
+                                req_id: req_id,
+                                error: true,
+                                result: result,
+                                message: err
+                            });
+                            return;
+                        }
 
-                    // return true for success
-                    socket.emit(topic, {
-                        result: true
+                        // we return result
+                        if(routerElem.return === undefined || routerElem.return) {
+                            socket.emit(routerElem.topic, {
+                                req_id: req_id,
+                                error: false,
+                                result: result
+                            });
+                        }
                     });
-                }
-                else {
-                    logger.log('warn', `unexpected message is received - ${JSON.stringify(jsonMsg)}`);
-                    socket.emit(jsonMsg[0], {
-                        result: false,
-                        message: `unexpected message is received - ${JSON.stringify(jsonMsg)}`
-                    });
-                }
+                });
             });
             return true;
         }
@@ -601,7 +628,7 @@
         getWorkflowRunClients: () => { return workflowRunClients; },
         clientType: Client.Type,
         //setIO: setIO,
-        sendEvent: sendEvent,
+        emitEvent: emitEvent,
         countQueuedEvents: countQueuedEvents,
         fetchEvent: fetchEvent,
         addClient: addClient,

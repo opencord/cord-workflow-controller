@@ -146,7 +146,10 @@
                 },
                 (callback) => {
                     // kickstart the test workflow
-                    probeClient.emit('onu.events', {serialNumber: 'testSerialXXX', other: 'test_other_field'});
+                    probeClient.emit(eventrouter.serviceEvents.EVENT_EMIT, {
+                        topic: 'onu.events',
+                        message: {serialNumber: 'testSerialXXX', other: 'test_other_field'}
+                    });
                     setTimeout(() => {
                         expect(workflowRunId).to.not.be.undefined;
                         callback(null, true);

@@ -168,7 +168,7 @@
 
             // remove workflow runs
             _.forOwn(workflowRunInfos, (workflowRunInfo) => {
-                workflowManagerClients[0].emit(server.serviceEvents.WORKFLOW_REMOVE_RUN, {
+                workflowManagerClients[0].emit(eventrouter.serviceEvents.WORKFLOW_REMOVE_RUN, {
                     workflow_id: workflowRunInfo.workflowId,
                     workflow_run_id: workflowRunInfo.workflowRunId
                 });
@@ -177,7 +177,7 @@
 
             // remove workflows
             _.forOwn(workflowIds, (workflowId) => {
-                workflowManagerClients[0].emit(server.serviceEvents.WORKFLOW_REMOVE, {
+                workflowManagerClients[0].emit(eventrouter.serviceEvents.WORKFLOW_REMOVE, {
                     workflow_id: workflowId
                 });
             });
@@ -231,7 +231,10 @@
             this.timeout(5000);
 
             // kickstart the workflow
-            probeClient.emit('onu.events', {serialNumber: 'testSerialXXX', other: 'test_other_field'});
+            probeClient.emit(eventrouter.serviceEvents.EVENT_EMIT, {
+                topic: 'onu.events',
+                message: {serialNumber: 'testSerialXXX', other: 'test_other_field'}
+            });
             setTimeout(() => {
                 expect(receivedKickstartMessages.length, 'num of message stores').to.equal(2);
                 receivedKickstartMessages.forEach((receivedKickstartMessageStore) => {
@@ -245,7 +248,10 @@
             this.timeout(5000);
 
             // kickstart the workflow
-            probeClient.emit('onu.events', {serialNumber: 'testSerialXXX', other: 'test_other_field'});
+            probeClient.emit(eventrouter.serviceEvents.EVENT_EMIT, {
+                topic: 'onu.events',
+                message: {serialNumber: 'testSerialXXX', other: 'test_other_field'}
+            });
             setTimeout(() => {
                 // kickstart will take 2 seconds roughly
                 expect(workflowRunInfos.length, 'num of workflow runs').to.equal(1);
@@ -259,7 +265,10 @@
             this.timeout(5000);
 
             // kickstart the workflow
-            probeClient.emit('onu.events', {serialNumber: 'testSerialXXX', other: 'test_other_field'});
+            probeClient.emit(eventrouter.serviceEvents.EVENT_EMIT, {
+                topic: 'onu.events',
+                message: {serialNumber: 'testSerialXXX', other: 'test_other_field'}
+            });
             setTimeout(() => {
                 // kickstart will take 2 seconds roughly
                 expect(workflowRunInfos.length, 'num of workflow runs').to.equal(1);
@@ -297,14 +306,14 @@
             this.timeout(5000);
 
             // kickstart the workflow
-            probeClient.emit(
-                'onu.events',
-                {serialNumber: 'testSerialXXX', other: 'test_other_field'}
-            );
-            probeClient.emit(
-                'datamodel.AttWorkflowDriverServiceInstance',
-                {operation: 'update', serialNumber: 'testSerialXXX', other: 'updated_test_other_field'}
-            );
+            probeClient.emit(eventrouter.serviceEvents.EVENT_EMIT, {
+                topic: 'onu.events',
+                message: {serialNumber: 'testSerialXXX', other: 'test_other_field'}
+            });
+            probeClient.emit(eventrouter.serviceEvents.EVENT_EMIT, {
+                topic: 'datamodel.AttWorkflowDriverServiceInstance',
+                message: {operation: 'update', serialNumber: 'testSerialXXX', other: 'updated_test_other_field'}
+            });
             setTimeout(() => {
                 // kickstart will take 2 seconds roughly
                 expect(workflowRunInfos.length, 'num of workflow runs').to.equal(1);
