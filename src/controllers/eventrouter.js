@@ -299,7 +299,7 @@
                     workflowRuns[workflowRunId] = workflowRun;
 
                     // route event
-                    logger.log('debug', `event ${topic} is routed to workflow run ${workflowRunId}`);
+                    logger.log('debug', `event ${topic} is routed to a new workflow run ${workflowRunId}`);
                     workflowRun.enqueueEvent(topic, message);
 
                     // KICKSTART!
@@ -307,6 +307,8 @@
                 }
             }
         });
+
+        return true;
     };
 
     const countQueuedEvents = (workflowRunId) => {
