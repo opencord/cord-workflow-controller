@@ -57,7 +57,7 @@
         logger.debug(`Received a message ${jsonMessage}`);
 
         // send the message to the event distributor
-        eventrouter.sendEvent(jsonMessage.topic, jsonMessage.message);
+        eventrouter.emitEvent(jsonMessage.topic, jsonMessage.message);
 
         res.status(200).send({
             result: true
