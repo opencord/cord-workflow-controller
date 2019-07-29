@@ -23,82 +23,10 @@
 
     let serviceEvents = {
         // workflow_run -> controller -> workflow_run
-        WORKFLOW_RUN_UPDATE_STATUS: 'cord.workflow.ctlsvc.workflow.run.status',
         WORKFLOW_RUN_COUNT_EVENTS: 'cord.workflow.ctlsvc.workflow.run.count',
         WORKFLOW_RUN_FETCH_EVENT: 'cord.workflow.ctlsvc.workflow.run.fetch',
         // controller -> workflow_run
         WORKFLOW_RUN_NOTIFY_EVENT: 'cord.workflow.ctlsvc.workflow.run.notify'
-    };
-
-    // WebSocket interface for workflow status update
-    // Message format:
-    // {
-    //     topic: 'cord.workflow.ctlsvc.workflow.run.status',
-    //     message: {
-    //         req_id: <req_id>, // optional
-    //         workflow_id: <workflow_id>,
-    //         workflow_run_id: <workflow_run_id>,
-    //         task_id: <task_id>,
-    //         status: 'begin' or 'end'
-    //     }
-    // }
-    const updateWorkflowRunStatus = (topic, message, cb) => {
-        const eventrouter = require('./eventrouter.js');
-
-        let errorMessage;
-        if(!message) {
-            // error
-            errorMessage = `Message body for topic ${topic} is null or empty`;
-            logger.log('warn', `Return error - ${errorMessage}`);
-            cb(errorMessage, false);
-            return;
-        }
-
-        if(!('workflow_id' in message)) {
-            // error
-            errorMessage = `workflow_id field is not in message body - ${message}`;
-            logger.log('warn', `Return error - ${errorMessage}`);
-            cb(errorMessage, false);
-            return;
-        }
-
-        if(!('workflow_run_id' in message)) {
-            // error
-            errorMessage = `workflow_run_id field is not in message body - ${message}`;
-            logger.log('warn', `Return error - ${errorMessage}`);
-            cb(errorMessage, false);
-            return;
-        }
-
-        if(!('task_id' in message)) {
-            // error
-            errorMessage = `task_id field is not in message body - ${message}`;
-            logger.log('warn', `Return error - ${errorMessage}`);
-            cb(errorMessage, false);
-            return;
-        }
-
-        if(!('status' in message)) {
-            // error
-            errorMessage = `status field is not in message body - ${message}`;
-            logger.log('warn', `Return error - ${errorMessage}`);
-            cb(errorMessage, false);
-            return;
-        }
-
-        let result = eventrouter.updateWorkflowRunStatus(
-            message.workflow_run_id,
-            message.task_id,
-            message.status.toLowerCase()
-        );
-        if(!result) {
-            errorMessage = `failed to update workflow run status ${message.workflow_run_id}`;
-            cb(errorMessage, false);
-        }
-        else {
-            cb(null, true);
-        }
-        return;
     };
 
     // WebSocket interface for counting queued events
@@ -220,10 +148,6 @@
 
     const getRouter = () => {
         return {
-            updateWorkflowRunStatus: {
-                topic: serviceEvents.WORKFLOW_RUN_UPDATE_STATUS,
-                handler: updateWorkflowRunStatus
-            },
             countQueuedEvents: {
                 topic: serviceEvents.WORKFLOW_RUN_COUNT_EVENTS,
                 handler: countQueuedEvents

@@ -121,12 +121,25 @@
         getTopics() {
             let allTopics = [];
             _.forOwn(this.topics, (_tasks, topic) => {
-                // value is an array
                 if(!allTopics.includes(topic)) {
                     allTopics.push(topic);
                 }
             });
             return allTopics;
+        }
+
+        isEventAcceptable(topic) {
+            for(let key in this.topics) {
+                if (!this.topics.hasOwnProperty(key)) {
+                    continue;
+                }
+
+                if(key === topic) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         getTasksForTopic(topic) {

@@ -20,7 +20,6 @@
 
     const _ = require('lodash');
     const dateformat = require('dateformat');
-    const WorkflowRunTask = require('./workflowruntask.js');
     const logger = require('../config/logger.js');
 
     class WorkflowRun {
@@ -29,11 +28,6 @@
             this.id = workflowRunId;
             // workflow id
             this.workflowId = workflowId;
-
-            // workflow run tasks - for storing status
-            // id: task id
-            // value : workflow run task obj
-            this.runTasks = {};
 
             // storing key-field, key-value pairs for <event, workflow run> mapping
             // key: topic
@@ -73,11 +67,7 @@
             let workflowRun = new WorkflowRun(workflowId, workflowRunId);
 
             let tasks = workflow.getTasks();
-            _.forOwn(tasks, (task, taskId) => {
-                // set run tasks
-                let runTask = new WorkflowRunTask.WorkflowRunTask(taskId);
-                workflowRun.addRunTask(runTask);
-
+            _.forOwn(tasks, (task, _taskId) => {
                 // set key_field / value
                 if(task.isCORDTask()) {
                     workflowRun.setEventKeyFieldValue(task.getTopic(), task.getKeyField(), null); // init
@@ -100,26 +90,6 @@
 
         getWorkflowId() {
             return this.workflowId;
-        }
-
-        addRunTask(runTask) {
-            this.runTasks[runTask.getTaskId()] = runTask;
-        }
-
-        getRunTask(taskId) {
-            if(taskId in this.runTasks) {
-                return this.runTasks[taskId];
-            }
-            return undefined;
-        }
-
-        getTaskStatus(taskId) {
-            return this.runTasks[taskId].getStatus();
-        }
-
-        updateTaskStatus(taskId, status) {
-            let runTask = this.runTasks[taskId];
-            runTask.setStatus(status);
         }
 
         setEventKeyFieldValue(topic, field, value=null) {
@@ -217,113 +187,10 @@
             return false;
         }
 
-        getFilteredRunTasks(includes, excludes) {
-            // returns tasks with filters
-            let includeStatuses=[];
-            let excludeStatuses=[];
-            let includeAll = false;
-
-            if(includes) {
-                if(Array.isArray(includes)) {
-                    // array
-                    includes.forEach((include) => {
-                        if(!includeStatuses.includes(include)) {
-                            includeStatuses.push(include);
-                        }
-                    });
-                }
-                else {
-                    includeStatuses.push(includes);
-                }
-            }
-            else {
-                // undefined or null
-                // include all
-                includeAll = true;
-            }
-
-            if(excludes) {
-                if(Array.isArray(excludes)) {
-                    // array
-                    excludes.forEach((exclude) => {
-                        if(!excludeStatuses.includes(exclude)) {
-                            excludeStatuses.push(exclude);
-                        }
-                    });
-                }
-                else {
-                    excludeStatuses.push(excludes);
-                }
-            }
-            else {
-                // in this case, nothing will be excluded
-                // leave the array empty
-            }
-
-            let filteredRunTasks = [];
-            _.forOwn(this.runTasks, (runTask, _runTaskId) => {
-                // 'excludes' has a higher priority than 'includes'
-                if(!excludes.includes(runTask.getStatus())) {
-                    if(includeAll || includes.includes(runTask.getStatus())) {
-                        // screen tasks that are not finished
-                        filteredRunTasks.push(runTask);
-                    }
-                }
-            });
-            return filteredRunTasks;
-        }
-
-        getFilteredTopics(workflow, includes, excludes) {
-            // returns topics with filters
-            let filteredRunTasks = this.getFilteredRunTasks(includes, excludes);
-            let filteredTopics = [];
-
-            filteredRunTasks.forEach((runTask) => {
-                let taskId = runTask.getTaskId();
-                let task = workflow.getTask(taskId);
-                let topic = task.getTopic();
-                if(!filteredTopics.includes(topic)) {
-                    filteredTopics.push(topic);
-                }
-            });
-            return filteredTopics;
-        }
-
-        getAllTopics(workflow) {
-            return this.getFilteredTopics(workflow, null, null);
-        }
-
-        getAcceptableTopics(workflow) {
-            // return topics for tasks that are running or to be run in the future
-            // include all tasks that are not ended
-            return this.getFilteredTopics(workflow, null, [WorkflowRunTask.TaskStatus.END]);
-        }
-
-        isTopicAcceptable(workflow, topic) {
-            // get topics of tasks that are not completed yet
-            let filteredTopics = this.getFilteredTopics(
-                workflow,
-                null,
-                [WorkflowRunTask.TaskStatus.END]
-            );
-
-            if(filteredTopics.includes(topic)) {
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-
-        isEventAcceptable(workflow, topic, message) {
-            // event is acceptable if it meets following criteria
-            // 1) the workflow is currently interested in the same topic
-            //      (finished tasks are not counted)
-            // 2) the task's key field and value
-            if(this.isTopicAcceptable(workflow, topic) &&
-                this.isEventAcceptableByKeyFieldValue(topic, message)) {
-                // update key-field values for my topic
-                this.updateEventKeyFieldValueFromMessage(topic, message);
+        isEventAcceptable(topic, message) {
+            // event is acceped if event has
+            // the same key field and its value as workflow_run
+            if(this.isEventAcceptableByKeyFieldValue(topic, message)) {
                 return true;
             }
 
