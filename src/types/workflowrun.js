@@ -118,7 +118,7 @@
         }
 
         updateTaskStatus(taskId, status) {
-            let runTask = this.runTasks[taskId].getStatus();
+            let runTask = this.runTasks[taskId];
             runTask.setStatus(status);
         }
 
