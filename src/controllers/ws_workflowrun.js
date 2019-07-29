@@ -87,7 +87,6 @@
         }
 
         let result = eventrouter.updateWorkflowRunStatus(
-            message.workflow_id,
             message.workflow_run_id,
             message.task_id,
             message.status.toLowerCase()
