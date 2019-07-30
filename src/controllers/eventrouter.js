@@ -378,7 +378,7 @@
 
         logger.log('debug', `workflow run ${workflowRunId}, task ${taskId} fetches an event`);
 
-        let event = workflowRun.dequeueEvent(topic);
+        let event = workflowRun.dequeueEventByTopic(topic);
         if(event) {
             return event;
         }
