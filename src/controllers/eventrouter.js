@@ -286,6 +286,8 @@
     const emitEvent = (topic, message) => {
         logger.log('debug', `event is raised : topic ${topic}, message ${JSON.stringify(message)}`);
 
+        let runningWorkflows = [];
+
         // route event to running instances
         _.forOwn(workflowRuns, (workflowRun, workflowRunId) => {
             let workflowId = workflowRun.getWorkflowId();
@@ -303,6 +305,9 @@
 
                     logger.log('debug', `event ${topic} is routed to workflow run ${workflowRunId}`);
                     workflowRun.enqueueEvent(topic, message);
+
+                    // mark to not kickstart a new one
+                    runningWorkflows.push(workflowId);
                 }
                 else {
                     logger.log('debug', `workflow run ${workflowRunId} reject the event : \
@@ -313,22 +318,24 @@
 
         // check if the event is a kickstart event
         _.forOwn(workflows, (workflow, workflowId) => {
-            if(workflow.isKickstartTopic(topic)) {
-                // we need to buffer the event until workflow run is brought up
-                let workflowRun = WorkflowRun.WorkflowRun.makeNewRun(workflow);
-                workflowRun.updateEventKeyFieldValueFromMessage(topic, message);
+            if(!runningWorkflows.includes(workflowId)) {
+                if(workflow.isKickstartTopic(topic)) {
+                    // we need to buffer the event until workflow run is brought up
+                    let workflowRun = WorkflowRun.WorkflowRun.makeNewRun(workflow);
+                    workflowRun.updateEventKeyFieldValueFromMessage(topic, message);
 
-                let workflowRunId = workflowRun.getId();
+                    let workflowRunId = workflowRun.getId();
 
-                // register for management
-                workflowRuns[workflowRunId] = workflowRun;
+                    // register for management
+                    workflowRuns[workflowRunId] = workflowRun;
 
-                // route event
-                logger.log('debug', `event ${topic} is routed to a new workflow run ${workflowRunId}`);
-                workflowRun.enqueueEvent(topic, message);
+                    // route event
+                    logger.log('debug', `event ${topic} is routed to a new workflow run ${workflowRunId}`);
+                    workflowRun.enqueueEvent(topic, message);
 
-                // KICKSTART!
-                kickstart(workflowId, workflowRunId);
+                    // KICKSTART!
+                    kickstart(workflowId, workflowRunId);
+                }
             }
         });
 
