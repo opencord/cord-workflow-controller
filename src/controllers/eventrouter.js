@@ -193,7 +193,7 @@
             return false;
         }
 
-        if(status in ['success', 'failed', 'end']) {
+        if(status === 'success' || status === 'failed' || status === 'end') {
             removeWorkflowRun(workflowRunId);
         }
         return true;
