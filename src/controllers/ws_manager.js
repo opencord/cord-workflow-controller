@@ -422,7 +422,7 @@
         }
 
         let results = [];
-        for(let d in message.data) {
+        message.data.forEach((d) => {
             if(!('workflow_id' in d)) {
                 // error
                 errorMessage = `field 'workflow_id' does not exist in message body - ${JSON.stringify(d)}`;
@@ -454,7 +454,7 @@
             // set workflow status
             let result = eventrouter.setWorkflowRunStatus(workflowRunId, status);
             results.append(result);
-        }
+        });
 
         cb(null, results);
         return;

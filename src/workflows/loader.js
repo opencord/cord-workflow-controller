@@ -114,9 +114,9 @@
                 // found workflow essence file in json format
                 let workflows = loadWorkflows(dirEntry);
                 if(workflows) {
-                    for(let workflow in workflows) {
+                    workflows.forEach((workflow) => {
                         allWorkflows.push[workflow];
-                    }
+                    });
                 }
             }
         });

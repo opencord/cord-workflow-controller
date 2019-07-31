@@ -51,9 +51,9 @@
 
             // load built-in workflows
             let workflows = workflowLoader.loadAllWorkflows();
-            for(let workflow in workflows) {
+            workflows.forEach((workflow) => {
                 eventrouter.addWorkflow(workflow);
-            }
+            });
         });
         app.server = server;
         return server;

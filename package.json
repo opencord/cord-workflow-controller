@@ -1,6 +1,6 @@
 {
     "name": "cord_workflow_controller",
-    "version": "0.5.2",
+    "version": "0.5.3",
     "description": "CORD Workflow Controller",
     "main": "src/server.js",
     "scripts": {
