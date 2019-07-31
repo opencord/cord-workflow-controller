@@ -453,7 +453,7 @@
             // there must be a workflow matching
             // set workflow status
             let result = eventrouter.setWorkflowRunStatus(workflowRunId, status);
-            results.append(result);
+            results.push(result);
         });
 
         cb(null, results);
